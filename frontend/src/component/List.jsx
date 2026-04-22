@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
+import { useAppDispatch } from '../store/hooks'
+import { removeTodos, editTodos, toggleComplete, getTodos } from '../store/slices/todoSlice'
 
-import {update_existing_todo,delete_existing_todo} from '../apis/index'
 
-export default function List({todos,err,loading,updatedTodos}) {
+export default function List({ todos,err,loading,onRefresh }) {
   const [isEditing,setisEditing] = useState(null)
-  const [inputValue,setinputValue] = useState('')
+  const [inputValue,setinputValue] = useState('') ;
+  const dispatch = useAppDispatch()
+
 
 
   const doublehanlde = (todo) =>{
@@ -18,11 +21,15 @@ export default function List({todos,err,loading,updatedTodos}) {
   }
 
   const handleclick = (id) => {
-    return async (e) => {
+    return async () => {
       if(window.confirm('确定要删除吗？')){
         try{
-          const response = await delete_existing_todo(id)
-          updatedTodos?.();
+         await dispatch(removeTodos(id))
+         if(onRefresh){
+          onRefresh()
+         }else{
+          dispatch(getTodos())
+         }
         }catch(err){
           console.error(err)
         }
@@ -36,13 +43,13 @@ export default function List({todos,err,loading,updatedTodos}) {
     return async (e) => {
        if (e.key === 'Enter' &&  inputValue.trim()){
         try{
-          const newTodo = {
-            id:id,
-            todo:inputValue
-          }
-          const response = await update_existing_todo(id,newTodo)
+          await dispatch(editTodos({ id, data: {todo: inputValue} }))
           inputBlur()
-          updatedTodos?.();
+          if(onRefresh){
+            onRefresh()
+          }else{
+            dispatch(getTodos())
+          }
         }catch(err){
           console.error(err)
         }
@@ -53,12 +60,12 @@ export default function List({todos,err,loading,updatedTodos}) {
   const updataCheck = (id) => {
     return async (e) => {
       try{
-        const newTodo = {
-          id:id,
-          completed:e.target.checked 
+        await dispatch(toggleComplete({ id, completed: e.target.checked }))
+        if(onRefresh){
+          onRefresh()
+        }else{
+          dispatch(getTodos())
         }
-        const response = await update_existing_todo(id,newTodo)
-        updatedTodos?.();
       }catch(err){
         console.error(err)
       }

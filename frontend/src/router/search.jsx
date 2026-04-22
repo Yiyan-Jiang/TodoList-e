@@ -1,36 +1,30 @@
-import React, { useCallback, useState } from 'react'
-import {search_todos} from '../apis/index'
+import React, { useState } from 'react'
 import List from '../component/List'
+import { useAppDispatch, useAppSelector } from '../store/hooks'
+import { searchTodos } from '../store/slices/searchSlice'
 
-export default function search() {
+
+
+export default function Search() {
   const [searchVal , setsearchVal] = useState('')
-  const [todos , setTodos ] = useState([])
-  const [loading, setLoading] = useState(false);
-  const [err , setErr] = useState(null)
- 
- const fetchTodos = useCallback(async () => {
-    if (!searchVal.trim()) return;   
-    try {
-      setLoading(true);
-      setErr(null);
-      const response = await search_todos(searchVal);
-      setTodos(response.data);
-    } catch (err) {
-      setErr(err.message);
-    } finally {
-      setLoading(false);
+  const dispatch = useAppDispatch()
+  const todos = useAppSelector( state => state.search.items )
+  const loading = useAppSelector( state => state.search.loading )
+  const err = useAppSelector( state => state.search.error)
+
+
+  const handleKeyup = (e) => {
+    if (e.key == 'Enter' && searchVal.trim()) {
+      dispatch(searchTodos(searchVal))
     }
-  }, [searchVal]);
+  }
 
-  const handleKeyup = useCallback(
-    (e) => {
-      if (e.key === 'Enter' ) {
-        fetchTodos();
-      }
-    },
-    [fetchTodos]
-  );
-
+  // 传递一个刷新函数，解决search不动态更新的问题
+  const handleRefresh = () => {
+    if (searchVal.trim()) {
+      dispatch(searchTodos(searchVal))
+    }
+  }
   return (
     <div>
       <div className='h-10 bg-[#D1B7B2] w-full'>
@@ -43,7 +37,8 @@ export default function search() {
       </div>
       <List  
         todos={todos} err={err} loading={loading}
-        updatedTodos={fetchTodos}/>
+        onRefresh={handleRefresh}
+      />
     </div>
   )
 }

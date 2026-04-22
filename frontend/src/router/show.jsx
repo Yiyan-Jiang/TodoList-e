@@ -1,74 +1,55 @@
-import React, { useEffect, useState ,useCallback } from 'react'
+import React, { useEffect } from 'react'
 import Head from '../component/Head'
 import List from '../component/List'
-import { read_todos,update_existing_todo,delete_existing_todo } from '../apis/index'
 
-
+import { useAppDispatch, useAppSelector } from '../store/hooks'
+import { getTodos, removeTodos, toggleComplete } from '../store/slices/todoSlice'
 
 export default function Show() {
-  const [todos , setTodos ] = useState([])
-  const [loading , setLoading] = useState(true)
-  const [err , setErr] = useState(null)
+  const dispatch = useAppDispatch()
+  const todos = useAppSelector(state => state.todos.items)
+  const loading = useAppSelector(state => state.todos.loading)
+  const err = useAppSelector( state => state.todos.error)
 
-  const fetchTodos = useCallback(
-    async () => {
-    try {
-      setLoading(true);
-      const response = await read_todos();
-      setTodos(response.data);
-      setErr(null);
-    } catch (error) {
-      setErr(error.message);
-    } finally {
-      setLoading(false);
-    }
-    }, []);
+  useEffect(()=>{
+    dispatch(getTodos())
+  },[]) // warning 不管
 
-  
-
-  const allChecked = todos.length > 0 && todos.every(todo => todo.completed)
+  const allChecked = todos?.length > 0 && todos.every(todo => todo.completed)
 
   const updataAll = async (e) => {
-    const updataProm = todos.map(todo => 
-      update_existing_todo(todo.id, { ...todo, completed:e.target.checked })
-    )
-    try{
-      await Promise.all(updataProm) //异步实现，map没法await
-      await fetchTodos();
-    }catch(err){
+    try {
+      await Promise.all(todos.map(todo => 
+        dispatch(toggleComplete({ id:todo.id, completed: e.target.checked }))
+      ))
+      dispatch(getTodos())
+    } catch (err) {
       console.error(err);
     }
   }
 
-  const TodoscmpCnt = todos.filter(todo => todo.completed).length;
-  const TodouncmpCnt = todos.length - TodoscmpCnt;
+  const TodoscmpCnt = todos.filter(todo => todo.completed).length
+  const TodouncmpCnt = todos.length - TodoscmpCnt
 
   const clearAllcmp = async () => {
     const cmpTodos = todos.filter(todo => todo.completed)
-    if(cmpTodos.length == 0) return 
-    
-    const delPro = cmpTodos.map(todo => delete_existing_todo(todo.id))
-    try{
-      await Promise.all(delPro)
-      await fetchTodos();
+    if(cmpTodos.length == 0 ) return
+
+    try {
+      await Promise.all(cmpTodos.map( todo => dispatch(removeTodos(todo.id))))
+      dispatch(getTodos())
     }catch(err){
       console.error(err);
     }
   }
 
-  useEffect(()=>{
-    fetchTodos();
-  },[fetchTodos])
-
   return (
     <div className='overflow-auto relative'>
-      <Head
-      updatedTodos={fetchTodos}/>
+      <Head/>
       <div
       className='overflow-auto h-190'>
       <List  
         todos={todos} err={err} loading={loading}
-        updatedTodos={fetchTodos}
       />
       </div>
 

@@ -1,19 +1,19 @@
-
 import React, { useState } from 'react'
-import { create_new_todo } from '../apis/index'
+import { useAppDispatch } from '../store/hooks'
+import { addTodo, getTodos } from '../store/slices/todoSlice'
 
-export default function Head({updatedTodos}) {
+
+export default function Head() {
   const [inputValue, setInValue] = useState('')
+  const dispatch = useAppDispatch()
+
 
   const handleKeyup = async (e) => {
     if (e.key === 'Enter' &&  inputValue.trim()){
       try{
-        const newTodo = {
-          todo:inputValue 
-        }
-        const response = await create_new_todo(newTodo)
+        await dispatch(addTodo({todo:inputValue}))
         setInValue('')
-        updatedTodos?.();
+        dispatch(getTodos())
       } catch (err){
         console.error(err)
       }
