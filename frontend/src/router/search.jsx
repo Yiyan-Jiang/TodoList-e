@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import List from '../component/List'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { searchTodos } from '../store/slices/searchSlice'
+import { searchTodos, clearSearchResult } from '../store/slices/searchSlice'
 
 
 
@@ -12,6 +12,11 @@ export default function Search() {
   const loading = useAppSelector( state => state.search.loading )
   const err = useAppSelector( state => state.search.error)
 
+  useEffect(()=>{
+    return () => {
+      dispatch(clearSearchResult())
+    }
+  },[dispatch])
 
   const handleKeyup = (e) => {
     if (e.key == 'Enter' && searchVal.trim()) {

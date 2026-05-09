@@ -1,9 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { search_todos } from "../../apis";
 
-
-
-
 // 搜索Todos
 export const searchTodos = createAsyncThunk('todos/searchTodos', async (searchStr) => {
   const res = await search_todos(searchStr)
@@ -17,7 +14,13 @@ const searchSlice = createSlice({
     loading: false,
     error: null,
   },
-  reducers:{},
+  reducers:{
+    clearSearchResult: (state) => {
+      state.items = []
+      state.loading = false
+      state.error = null
+    },
+  },
   extraReducers:(builder) => {
     builder
       .addCase(searchTodos.pending, (state) => {
@@ -35,4 +38,5 @@ const searchSlice = createSlice({
   }
 })
 
+export const { clearSearchResult } = searchSlice.actions
 export default searchSlice.reducer
