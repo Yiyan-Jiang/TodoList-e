@@ -34,3 +34,6 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# === 教学文档输出 ===
+教学md/

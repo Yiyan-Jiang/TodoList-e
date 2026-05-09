@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import List from '../component/List'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { searchTodos } from '../store/slices/searchSlice'
@@ -20,11 +20,12 @@ export default function Search() {
   }
 
   // 传递一个刷新函数，解决search不动态更新的问题
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     if (searchVal.trim()) {
       dispatch(searchTodos(searchVal))
     }
-  }
+  },[dispatch,searchVal])
+  
   return (
     <div>
       <div className='h-10 bg-[#D1B7B2] w-full'>

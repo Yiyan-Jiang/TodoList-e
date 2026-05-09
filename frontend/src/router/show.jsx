@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import Head from '../component/Head'
 import List from '../component/List'
 
@@ -15,9 +15,8 @@ export default function Show() {
     dispatch(getTodos())
   },[]) // warning 不管
 
-  const allChecked = todos?.length > 0 && todos.every(todo => todo.completed)
 
-  const updataAll = async (e) => {
+  const updataAll = useCallback(async (e) => {
     try {
       await Promise.all(todos.map(todo => 
         dispatch(toggleComplete({ id:todo.id, completed: e.target.checked }))
@@ -26,12 +25,27 @@ export default function Show() {
     } catch (err) {
       console.error(err);
     }
-  }
+  },
+    [dispatch, todos]
+  )
 
-  const TodoscmpCnt = todos.filter(todo => todo.completed).length
-  const TodouncmpCnt = todos.length - TodoscmpCnt
 
-  const clearAllcmp = async () => {
+  const todoStats = useMemo(()=>{
+    const allChecked = todos?.length > 0 && todos.every(todo => todo.completed)
+    const TodoscmpCnt = todos.filter(todo => todo.completed).length
+    const TodouncmpCnt = todos.length - TodoscmpCnt
+
+    return {
+      allChecked,
+      TodoscmpCnt,
+      TodouncmpCnt,
+    }
+    }
+    ,[todos]
+  )
+
+
+  const clearAllcmp = useCallback(async () => {
     const cmpTodos = todos.filter(todo => todo.completed)
     if(cmpTodos.length == 0 ) return
 
@@ -41,7 +55,7 @@ export default function Show() {
     }catch(err){
       console.error(err);
     }
-  }
+  },[dispatch,todos])
 
   return (
     <div className='overflow-auto relative'>
@@ -57,12 +71,12 @@ export default function Show() {
         <div>
           <input type="checkbox"
           className='cursor-pointer'
-          checked={allChecked}
+          checked={todoStats.allChecked}
           onChange={updataAll}
           /> 全选
-          <span className='ml-1'>未完成{TodouncmpCnt}</span>
+          <span className='ml-1'>未完成{todoStats.TodouncmpCnt}</span>
           <span> / </span>
-          <span>已完成{TodoscmpCnt}</span>
+          <span>已完成{todoStats.TodoscmpCnt}</span>
         </div>
         <div>
           <button
