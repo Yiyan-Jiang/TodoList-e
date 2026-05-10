@@ -1,69 +1,65 @@
-import React, { useCallback, useEffect, useMemo } from 'react'
+import React from 'react'
 import Head from '../component/Head'
 import List from '../component/List'
+import { useTodos } from '../hooks/useTodos'
+import { useTodoStats } from '../hooks/useTodoStats'
+import { useReducer, useMemo } from 'react'
+import {todoUiInitialState, todoUiReducer} from '../reducers/todoUiReducer'
 
-import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { getTodos, removeTodos, toggleComplete } from '../store/slices/todoSlice'
 
 export default function Show() {
-  const dispatch = useAppDispatch()
-  const todos = useAppSelector(state => state.todos.items)
-  const loading = useAppSelector(state => state.todos.loading)
-  const err = useAppSelector( state => state.todos.error)
+  const {
+    todos,
+    loading,
+    error,
+    createTodo,
+    deleteTodo,
+    editTodo,
+    toggleTodo,
+    toggleAllTodos,
+    clearCompletedTodos,
+  } = useTodos()
 
-  useEffect(()=>{
-    dispatch(getTodos())
-  },[]) // warning 不管
-
-
-  const updataAll = useCallback(async (e) => {
-    try {
-      await Promise.all(todos.map(todo => 
-        dispatch(toggleComplete({ id:todo.id, completed: e.target.checked }))
-      ))
-      dispatch(getTodos())
-    } catch (err) {
-      console.error(err);
-    }
-  },
-    [dispatch, todos]
+  const [todoUi, dispatchTodoUi] = useReducer(
+    todoUiReducer,
+    todoUiInitialState
   )
 
-
-  const todoStats = useMemo(()=>{
-    const allChecked = todos?.length > 0 && todos.every(todo => todo.completed)
-    const TodoscmpCnt = todos.filter(todo => todo.completed).length
-    const TodouncmpCnt = todos.length - TodoscmpCnt
-
-    return {
-      allChecked,
-      TodoscmpCnt,
-      TodouncmpCnt,
+  const visibleTodos = useMemo(()=>{
+    if (todoUi.filter === 'active'){
+      return todos.filter((todo)=> !todo.completed)
     }
+    if(todoUi.filter === 'completed'){
+      return todos.filter((todo) => todo.completed)
     }
-    ,[todos]
-  )
+
+    return todos
+  },[todos, todoUi.filter])
 
 
-  const clearAllcmp = useCallback(async () => {
-    const cmpTodos = todos.filter(todo => todo.completed)
-    if(cmpTodos.length == 0 ) return
-
-    try {
-      await Promise.all(cmpTodos.map( todo => dispatch(removeTodos(todo.id))))
-      dispatch(getTodos())
-    }catch(err){
-      console.error(err);
-    }
-  },[dispatch,todos])
+  const todoStats = useTodoStats(todos)
 
   return (
     <div className='overflow-auto relative'>
-      <Head/>
+      <Head onCreate={createTodo}/>
+
+      <div className='bg-pink-300 h-10 w-full flex justify-between p-2'>
+        <button onClick={() => dispatchTodoUi({ type: 'SET_FILTER', payload: 'all' })}>
+          全部
+        </button>
+        <button onClick={() => dispatchTodoUi({ type: 'SET_FILTER', payload: 'active' })}>
+          未完成
+        </button>
+        <button onClick={() => dispatchTodoUi({ type: 'SET_FILTER', payload: 'completed' })}>
+          已完成
+        </button>
+      </div>
+
       <div
-      className='overflow-auto h-190'>
+      className='overflow-auto h-178'>
       <List  
-        todos={todos} err={err} loading={loading}
+        todos={visibleTodos} err={error} loading={loading}
+        onDelete={deleteTodo} onEdit = {editTodo} onToggle={toggleTodo}
       />
       </div>
 
@@ -72,15 +68,16 @@ export default function Show() {
           <input type="checkbox"
           className='cursor-pointer'
           checked={todoStats.allChecked}
-          onChange={updataAll}
-          /> 全选
+          onChange={(e) => toggleAllTodos(e.target.checked)}
+          /> 
+          {' '}全选
           <span className='ml-1'>未完成{todoStats.TodouncmpCnt}</span>
           <span> / </span>
           <span>已完成{todoStats.TodoscmpCnt}</span>
         </div>
         <div>
           <button
-          onClick={clearAllcmp}
+          onClick={clearCompletedTodos}
           className='h-8 w-35 rounded-md bg-[#C73E3A] active:scale-95 transition cursor-pointer'
           >清除所有已完成</button>
         </div>

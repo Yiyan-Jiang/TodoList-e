@@ -1,19 +1,16 @@
 import React, { useState } from 'react'
-import { useAppDispatch } from '../store/hooks'
-import { addTodo, getTodos } from '../store/slices/todoSlice'
 
 
-export default function Head() {
+export default function Head({onCreate}) {
   const [inputValue, setInValue] = useState('')
-  const dispatch = useAppDispatch()
-
+  
 
   const handleKeyup = async (e) => {
     if (e.key === 'Enter' &&  inputValue.trim()){
+      const nextValue = inputValue.trim()
       try{
-        await dispatch(addTodo({todo:inputValue}))
+        await onCreate(nextValue)
         setInValue('')
-        dispatch(getTodos())
       } catch (err){
         console.error(err)
       }

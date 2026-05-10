@@ -10,13 +10,13 @@ export const getTodos = createAsyncThunk('todos/getTodos', async () => {
 // 添加新的Todo
 export const addTodo = createAsyncThunk('todos/addTodos', async (newTodo) => {
   const res = await create_new_todo(newTodo)
-  return res
+  return res.data
 })
 
 // 更新Todo
 export const editTodos = createAsyncThunk('todos/editTodos', async ({id ,data}) => {
   const res = await update_existing_todo(id,data)
-  return res
+  return res.data
 })
 
 // 删除Todo
@@ -64,7 +64,10 @@ const todoSlice = createSlice({
       })
       .addCase(editTodos.fulfilled, (state, action) => {
         const index = state.items.findIndex( t => t.id === action.payload.id)
-        if( index !== -1 ) state.items[index] = {...state.items[index], ...action.payload.data}
+        // if( index !== -1 ) state.items[index] = {...state.items[index], ...action.payload.data}
+         if (index !== -1) {
+          state.items[index] = action.payload
+        }
       })
       .addCase(editTodos.rejected, (state, action) => {
         state.error = action.message.error

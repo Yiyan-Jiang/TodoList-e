@@ -1,49 +1,90 @@
-import React, { useCallback, useEffect, useState } from 'react'
+// frontend/src/router/Search.jsx
+import React, { useReducer } from 'react'
 import List from '../component/List'
-import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { searchTodos, clearSearchResult } from '../store/slices/searchSlice'
-
-
+import { useSearchTodos } from '../hooks/useSearchTodos'
+import { useTodos } from '../hooks/useTodos'
+import {
+  todoUiInitialState,
+  todoUiReducer,
+} from '../reducers/todoUiReducer'
 
 export default function Search() {
-  const [searchVal , setsearchVal] = useState('')
-  const dispatch = useAppDispatch()
-  const todos = useAppSelector( state => state.search.items )
-  const loading = useAppSelector( state => state.search.loading )
-  const err = useAppSelector( state => state.search.error)
+  const [todoUi, dispatchTodoUi] = useReducer(
+    todoUiReducer,
+    todoUiInitialState
+  )
 
-  useEffect(()=>{
-    return () => {
-      dispatch(clearSearchResult())
-    }
-  },[dispatch])
+  const { todos, loading, error, search } = useSearchTodos()
 
-  const handleKeyup = (e) => {
-    if (e.key == 'Enter' && searchVal.trim()) {
-      dispatch(searchTodos(searchVal))
+  const {
+    deleteTodo,
+    editTodo,
+    toggleTodo,
+  } = useTodos({ autoLoad: false })
+
+  const handleKeyUp = (e) => {
+    if (e.key === 'Enter') {
+      search(todoUi.keyword)
     }
   }
 
-  // 传递一个刷新函数，解决search不动态更新的问题
-  const handleRefresh = useCallback(() => {
-    if (searchVal.trim()) {
-      dispatch(searchTodos(searchVal))
-    }
-  },[dispatch,searchVal])
-  
+  const refreshSearchResult = () => {
+    search(todoUi.keyword)
+  }
+
   return (
     <div>
       <div className='h-10 bg-[#D1B7B2] w-full'>
-        <input type="text"
-        className=' h-full w-full outline-none focus:bg-gray-50'
-        value={searchVal}
-        onChange={(e) => setsearchVal(e.target.value)}
-        onKeyUp={handleKeyup}
-        placeholder='请输入要搜索的事项'/>
+        <input
+          type='text'
+          className='h-full w-full outline-none focus:bg-gray-50'
+          value={todoUi.keyword}
+          onChange={(e) =>
+            dispatchTodoUi({
+              type: 'SET_KEYWORD',
+              payload: e.target.value,
+            })
+          }
+          onKeyUp={handleKeyUp}
+          placeholder='请输入要搜索的事项'
+        />
       </div>
-      <List  
-        todos={todos} err={err} loading={loading}
-        onRefresh={handleRefresh}
+
+      <List
+        todos={todos}
+        err={error}
+        loading={loading}
+        editingId={todoUi.editingId}
+        draftText={todoUi.draftText}
+        onStartEdit={(todo) =>
+          dispatchTodoUi({
+            type: 'START_EDIT',
+            payload: {
+              id: todo.id,
+              text: todo.todo,
+            },
+          })
+        }
+        onChangeDraftText={(value) =>
+          dispatchTodoUi({
+            type: 'SET_DRAFT_TEXT',
+            payload: value,
+          })
+        }
+        onCancelEdit={() => dispatchTodoUi({ type: 'CANCEL_EDIT' })}
+        onDelete={async (id) => {
+          await deleteTodo(id)
+          refreshSearchResult()
+        }}
+        onEdit={async (id) => {
+          await editTodo(id, todoUi.draftText)
+          dispatchTodoUi({ type: 'CANCEL_EDIT' })
+          refreshSearchResult()
+        }}
+        onToggle={async (id, completed) => {
+          await toggleTodo(id, completed)
+          refreshSearchResult()
+        }}
       />
     </div>
   )

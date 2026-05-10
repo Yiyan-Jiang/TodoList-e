@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 
-Database_URL = 'mysql+aiomysql://root:123456@localhost:3306/todo_db'
+Database_URL = 'mysql+aiomysql://root:@localhost:3306/todo_db'
 # 本地数据库地址。已提前建库todo_db
 
 engine = create_async_engine(Database_URL , echo=True)
