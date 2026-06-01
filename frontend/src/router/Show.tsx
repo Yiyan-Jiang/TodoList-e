@@ -1,10 +1,11 @@
-import React from 'react'
+import { startTransition, useOptimistic } from 'react'
 import Head from '../component/Head'
 import List from '../component/List'
 import { useTodos } from '../hooks/useTodos'
 import { useTodoStats } from '../hooks/useTodoStats'
 import { useReducer, useMemo } from 'react'
 import {todoUiInitialState, todoUiReducer} from '../reducers/todoUiReducer'
+import type { OptimisticTodo } from '../types/todo'
 
 
 export default function Show() {
@@ -18,6 +19,7 @@ export default function Show() {
     toggleTodo,
     toggleAllTodos,
     clearCompletedTodos,
+    refreshTodos,
   } = useTodos()
 
   const [todoUi, dispatchTodoUi] = useReducer(
@@ -25,23 +27,52 @@ export default function Show() {
     todoUiInitialState
   )
 
+  const [optimisticTodos, addOptimisticTodo] = useOptimistic<
+    OptimisticTodo[],
+    OptimisticTodo
+  >(
+    todos,
+    (currentTodos, nextTodo) => [nextTodo, ...currentTodos]
+  )
+
+
   const visibleTodos = useMemo(()=>{
     if (todoUi.filter === 'active'){
-      return todos.filter((todo)=> !todo.completed)
+      return optimisticTodos.filter((todo)=> !todo.completed)
     }
     if(todoUi.filter === 'completed'){
-      return todos.filter((todo) => todo.completed)
+      return optimisticTodos.filter((todo) => todo.completed)
     }
 
-    return todos
-  },[todos, todoUi.filter])
+    return optimisticTodos
+  },[optimisticTodos, todoUi.filter])
 
 
-  const todoStats = useTodoStats(todos)
+  const todoStats = useTodoStats(optimisticTodos)
+
+  const handleCreate = (todoText: string) => {
+    const tempTodo: OptimisticTodo = {
+      id: Date.now(),
+      todo:todoText,
+      completed:false,
+      pending:true,
+    }
+
+    startTransition(async () => {
+      addOptimisticTodo(tempTodo)
+
+      try {
+        await createTodo(todoText)
+      } catch (err) {
+        console.error(err);
+        refreshTodos()
+      }
+    })
+  }
 
   return (
     <div className='overflow-auto relative'>
-      <Head onCreate={createTodo}/>
+      <Head onCreate={handleCreate}/>
 
       <div className='bg-pink-300 h-10 w-full flex justify-between p-2'>
         <button onClick={() => dispatchTodoUi({ type: 'SET_FILTER', payload: 'all' })}>

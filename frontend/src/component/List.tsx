@@ -1,6 +1,15 @@
-// frontend/src/component/List.jsx
-import React, { memo } from 'react'
+import { memo } from 'react'
 import TodoItem from './TodoIiem'
+import type { Todo } from '../types/todo'
+
+interface ListProps {
+  todos: Todo[]
+  err: string | null
+  loading: boolean
+  onDelete: (id: number) => void | Promise<void>
+  onEdit: (id: number, nextValue: string) => void | Promise<void>
+  onToggle: (id: number, completed: boolean) => void | Promise<void>
+}
 
 const List = memo(function List({
   todos,
@@ -9,7 +18,7 @@ const List = memo(function List({
   onDelete,
   onEdit,
   onToggle,
-}) {
+}: ListProps) {
   if (loading) {
     return <div>加载中</div>
   }
@@ -20,7 +29,7 @@ const List = memo(function List({
 
   return (
     <div>
-      {todos?.map((todo) => (
+      {todos.map((todo) => (
         <TodoItem
           key={todo.id}
           todo={todo}

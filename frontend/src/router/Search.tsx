@@ -1,14 +1,17 @@
-// frontend/src/router/Search.jsx
-import React, { useReducer } from 'react'
+import { useEffect, useReducer } from 'react'
+import type { KeyboardEvent } from 'react'
 import List from '../component/List'
 import { useSearchTodos } from '../hooks/useSearchTodos'
 import { useTodos } from '../hooks/useTodos'
+import { useAppDispatch } from '../store/hooks'
+import { clearSearchResult } from '../store/slices/searchSlice'
 import {
   todoUiInitialState,
   todoUiReducer,
 } from '../reducers/todoUiReducer'
 
 export default function Search() {
+  const dispatch = useAppDispatch()
   const [todoUi, dispatchTodoUi] = useReducer(
     todoUiReducer,
     todoUiInitialState
@@ -22,7 +25,13 @@ export default function Search() {
     toggleTodo,
   } = useTodos({ autoLoad: false })
 
-  const handleKeyUp = (e) => {
+  useEffect(() => {
+    return () => {
+      dispatch(clearSearchResult())
+    }
+  }, [dispatch])
+
+  const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       search(todoUi.keyword)
     }
@@ -54,34 +63,15 @@ export default function Search() {
         todos={todos}
         err={error}
         loading={loading}
-        editingId={todoUi.editingId}
-        draftText={todoUi.draftText}
-        onStartEdit={(todo) =>
-          dispatchTodoUi({
-            type: 'START_EDIT',
-            payload: {
-              id: todo.id,
-              text: todo.todo,
-            },
-          })
-        }
-        onChangeDraftText={(value) =>
-          dispatchTodoUi({
-            type: 'SET_DRAFT_TEXT',
-            payload: value,
-          })
-        }
-        onCancelEdit={() => dispatchTodoUi({ type: 'CANCEL_EDIT' })}
-        onDelete={async (id) => {
+        onDelete={async (id: number) => {
           await deleteTodo(id)
           refreshSearchResult()
         }}
-        onEdit={async (id) => {
-          await editTodo(id, todoUi.draftText)
-          dispatchTodoUi({ type: 'CANCEL_EDIT' })
+        onEdit={async (id: number, nextValue: string) => {
+          await editTodo(id, nextValue)
           refreshSearchResult()
         }}
-        onToggle={async (id, completed) => {
+        onToggle={async (id: number, completed: boolean) => {
           await toggleTodo(id, completed)
           refreshSearchResult()
         }}

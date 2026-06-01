@@ -1,27 +1,32 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { search_todos } from "../../apis";
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { search_todos } from '../../apis'
+import type { Todo, TodoState } from '../../types/todo'
 
-// 搜索Todos
-export const searchTodos = createAsyncThunk('todos/searchTodos', async (searchStr) => {
-  const res = await search_todos(searchStr)
-  return res.data
-})
+export const searchTodos = createAsyncThunk<Todo[], string>(
+  'todos/searchTodos',
+  async (searchStr) => {
+    const res = await search_todos(searchStr)
+    return res.data
+  }
+)
+
+const initialState: TodoState = {
+  items: [],
+  loading: false,
+  error: null,
+}
 
 const searchSlice = createSlice({
   name: 'search',
-  initialState: {
-    items: [],
-    loading: false,
-    error: null,
-  },
-  reducers:{
+  initialState,
+  reducers: {
     clearSearchResult: (state) => {
       state.items = []
       state.loading = false
       state.error = null
     },
   },
-  extraReducers:(builder) => {
+  extraReducers: (builder) => {
     builder
       .addCase(searchTodos.pending, (state) => {
         state.loading = true
@@ -33,9 +38,9 @@ const searchSlice = createSlice({
       })
       .addCase(searchTodos.rejected, (state, action) => {
         state.loading = false
-        state.error = action.error.message
+        state.error = action.error.message ?? '搜索失败'
       })
-  }
+  },
 })
 
 export const { clearSearchResult } = searchSlice.actions

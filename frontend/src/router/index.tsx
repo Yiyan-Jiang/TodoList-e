@@ -1,6 +1,6 @@
 
 import { createBrowserRouter } from 'react-router-dom'
-import Show from './show'
+import Show from './Show'
 import Search from './Search'
 import Layout from '../pages/Layout'
 

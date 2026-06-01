@@ -1,10 +1,33 @@
-import React, { memo, useState } from 'react'
+import { memo, useLayoutEffect, useRef, useState } from 'react'
+import type { KeyboardEvent } from 'react'
+import type { Todo } from '../types/todo'
 
-// 单独拆分出Todo ， 避免因为某条TodoList的更新导致全部更新
+interface TodoItemProps {
+  todo: Todo
+  onDelete: (id: number) => void | Promise<void>
+  onEdit: (id: number, nextValue: string) => void | Promise<void>
+  onToggle: (id: number, completed: boolean) => void | Promise<void>
+}
 
-const TodoTtem = memo(function TodoItem({ todo, onDelete, onEdit, onToggle }) {
+const TodoItem = memo(function TodoItem({
+  todo,
+  onDelete,
+  onEdit,
+  onToggle,
+}: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [inputValue, setInputValue] = useState('')
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  useLayoutEffect(() => {
+    if (!isEditing) return
+
+    const input = inputRef.current
+    if (!input) return
+
+    input.focus()
+    input.setSelectionRange(input.value.length, input.value.length)
+  }, [isEditing])
 
   const handleDoubleClick = () => {
     setIsEditing(true)
@@ -16,17 +39,17 @@ const TodoTtem = memo(function TodoItem({ todo, onDelete, onEdit, onToggle }) {
     setInputValue('')
   }
 
-  const handleKeyUp = (e) => {
+  const handleKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return
 
     const nextValue = inputValue.trim()
-    if(!nextValue) return
+    if (!nextValue) return
 
     onEdit(todo.id, nextValue)
     closeEditing()
   }
 
-  return(
+  return (
     <div className='flex pl-2 items-center bg-amber-200 w-[95%] mx-auto my-3 h-10 relative hover:bg-amber-300 group'>
       <input
         type='checkbox'
@@ -37,6 +60,7 @@ const TodoTtem = memo(function TodoItem({ todo, onDelete, onEdit, onToggle }) {
 
       {isEditing ? (
         <input
+          ref={inputRef}
           type='text'
           className='outline-none ml-2'
           value={inputValue}
@@ -58,11 +82,10 @@ const TodoTtem = memo(function TodoItem({ todo, onDelete, onEdit, onToggle }) {
         onClick={() => onDelete(todo.id)}
         className='h-8 w-12 absolute right-3 rounded-md bg-[#C73E3A] active:scale-95 transition hidden group-hover:block cursor-pointer'
       >
-        删除
+        鍒犻櫎
       </button>
     </div>
   )
 })
-  
 
-export default TodoTtem
+export default TodoItem

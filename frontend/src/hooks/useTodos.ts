@@ -1,19 +1,22 @@
-
 import { useCallback, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import {
-  getTodos,
   addTodo,
-  removeTodos,
   editTodos,
+  getTodos,
+  removeTodos,
   toggleComplete,
 } from '../store/slices/todoSlice'
 
-export function useTodos({autoLoad = true} = {}) {
+interface UseTodosOptions {
+  autoLoad?: boolean
+}
+
+export function useTodos({ autoLoad = true }: UseTodosOptions = {}) {
   const dispatch = useAppDispatch()
-  const todos = useAppSelector(state => state.todos.items)
-  const loading = useAppSelector(state => state.todos.loading)
-  const error = useAppSelector(state => state.todos.error)
+  const todos = useAppSelector((state) => state.todos.items)
+  const loading = useAppSelector((state) => state.todos.loading)
+  const error = useAppSelector((state) => state.todos.error)
 
   const refreshTodos = useCallback(() => {
     dispatch(getTodos())
@@ -26,7 +29,7 @@ export function useTodos({autoLoad = true} = {}) {
   }, [autoLoad, refreshTodos])
 
   const createTodo = useCallback(
-    async (todo) => {
+    async (todo: string) => {
       await dispatch(addTodo({ todo })).unwrap()
       refreshTodos()
     },
@@ -34,7 +37,7 @@ export function useTodos({autoLoad = true} = {}) {
   )
 
   const deleteTodo = useCallback(
-    async (id) => {
+    async (id: number) => {
       await dispatch(removeTodos(id)).unwrap()
       refreshTodos()
     },
@@ -42,23 +45,21 @@ export function useTodos({autoLoad = true} = {}) {
   )
 
   const editTodo = useCallback(
-    async (id, newValue) => {
+    async (id: number, newValue: string) => {
       await dispatch(editTodos({ id, data: { todo: newValue } })).unwrap()
-      refreshTodos()
     },
-    [dispatch, refreshTodos]
+    [dispatch]
   )
 
   const toggleTodo = useCallback(
-    async (id, completed) => {
+    async (id: number, completed: boolean) => {
       await dispatch(toggleComplete({ id, completed })).unwrap()
-      refreshTodos()
     },
-    [dispatch, refreshTodos]
+    [dispatch]
   )
 
   const toggleAllTodos = useCallback(
-    async (completed) => {
+    async (completed: boolean) => {
       await Promise.all(
         todos.map((todo) =>
           dispatch(toggleComplete({ id: todo.id, completed })).unwrap()
@@ -91,6 +92,4 @@ export function useTodos({autoLoad = true} = {}) {
     toggleAllTodos,
     clearCompletedTodos,
   }
-
-
 }
