@@ -1,0 +1,41 @@
+.loading-fill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+  min-height: 72px;
+}
+
+.loading-fill__text {
+  position: relative;
+  display: inline-block;
+  color: #d1b7b2;
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+  overflow: hidden;
+}
+
+.loading-fill__text::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: #c73e3a;
+  clip-path: inset(100% 0 0 0);
+  animation: loading-fill-up 1.8s ease-in-out infinite;
+}
+
+@keyframes loading-fill-up {
+  0% {
+    clip-path: inset(100% 0 0 0);
+  }
+
+  72% {
+    clip-path: inset(0 0 0 0);
+  }
+
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}

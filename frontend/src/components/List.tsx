@@ -1,5 +1,6 @@
 import { memo } from 'react'
-import TodoItem from './TodoIiem'
+import TodoItem from './TodoItem'
+import Loading from './Share/Loading'
 import type { Todo } from '../types/todo'
 
 interface ListProps {
@@ -20,7 +21,11 @@ const List = memo(function List({
   onToggle,
 }: ListProps) {
   if (loading) {
-    return <div>加载中</div>
+    return (
+      <div className='flex min-h-40 items-center justify-center'>
+        <Loading />
+      </div>
+    )
   }
 
   if (err) {

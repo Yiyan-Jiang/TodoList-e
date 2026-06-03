@@ -2,6 +2,8 @@ import { memo, useLayoutEffect, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import type { Todo } from '../types/todo'
 
+import {Circle,CircleCheckBig} from 'lucide-react'
+
 interface TodoItemProps {
   todo: Todo
   onDelete: (id: number) => void | Promise<void>
@@ -50,19 +52,34 @@ const TodoItem = memo(function TodoItem({
   }
 
   return (
-    <div className='flex pl-2 items-center bg-amber-200 w-[95%] mx-auto my-3 h-10 relative hover:bg-amber-300 group'>
-      <input
+    <div className='group flex min-h-12 w-full items-center gap-3 border-b border-[#F0E4DA] px-4 py-3 last:border-b-0 hover:bg-[#E06F6B]'>
+      
+      {/* <input
         type='checkbox'
         className='cursor-pointer'
         checked={todo.completed}
         onChange={(e) => onToggle(todo.id, e.target.checked)}
-      />
+      /> */}
+
+      <button
+      type='button'
+      role='checkbox'
+      aria-checked={todo.completed}
+      aria-label={todo.completed ? '已完成' : '未完成'}
+      onClick={() => onToggle(todo.id, !todo.completed)}
+      className=''>
+        {todo.completed ? (
+          <CircleCheckBig></CircleCheckBig>
+        ) : (
+          <Circle></Circle>
+        )}
+      </button>
 
       {isEditing ? (
         <input
           ref={inputRef}
           type='text'
-          className='outline-none ml-2'
+          className='flex-1 outline-none'
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyUp={handleKeyUp}
@@ -71,7 +88,7 @@ const TodoItem = memo(function TodoItem({
         />
       ) : (
         <li
-          className='list-none ml-2 text-xl'
+          className='list-none flex-1 text-lg text-[#3F312E]'
           onDoubleClick={handleDoubleClick}
         >
           {todo.todo}
@@ -80,9 +97,9 @@ const TodoItem = memo(function TodoItem({
 
       <button
         onClick={() => onDelete(todo.id)}
-        className='h-8 w-12 absolute right-3 rounded-md bg-[#C73E3A] active:scale-95 transition hidden group-hover:block cursor-pointer'
+        className='hidden h-8 rounded-md bg-[#C73E3A] px-3 text-white active:scale-95 transition group-hover:block cursor-pointer'
       >
-        鍒犻櫎
+        删除
       </button>
     </div>
   )

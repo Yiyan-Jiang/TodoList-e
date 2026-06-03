@@ -5,3 +5,13 @@ html, body, #root {
   margin: 0;
   padding: 0;
 }
+
+* {
+  /* Firefox */
+  scrollbar-width: none;
+}
+
+/* WebKit */
+*::-webkit-scrollbar {
+  width: 0px;
+}
